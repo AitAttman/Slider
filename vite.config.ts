@@ -4,24 +4,22 @@ export default defineConfig({
   plugins: [],
   base: "",
   build: {
-    outDir: "docs/dist",
+    outDir: "docs",
     emptyOutDir: true,
     copyPublicDir: true,
     rollupOptions: {
       input: {
         // "slider": "src/slider.ts",
         "index": "index.html",
+        // "index": "pages/index2.html",
       },
       output: {
         entryFileNames: '[name].min.js',
         assetFileNames: '[name].min.[ext]',
         chunkFileNames: ({name, isEntry, moduleIds, facadeModuleId}) => {
-          console.log( 'name ', name)
-          console.log( 'isEntry ', isEntry)
                             return '[name].min.js'
                         },
         manualChunks: (id) => {
-          console.log( 'id ', id )
           if( id.includes('slider.ts'))
             return 'slider'
           if( id.includes('style.scss'))
