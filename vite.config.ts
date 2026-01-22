@@ -4,9 +4,9 @@ export default defineConfig({
   plugins: [],
   base: "",
   build: {
-    outDir: "dist",
+    outDir: "docs/dist",
     emptyOutDir: true,
-    copyPublicDir: false,
+    copyPublicDir: true,
     rollupOptions: {
       input: {
         // "slider": "src/slider.ts",
