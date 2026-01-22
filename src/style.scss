@@ -1,0 +1,103 @@
+.slider {
+    --btn-gap: 10px;
+    position: relative;
+    max-width: 100%;
+    margin: 0 auto;
+    overflow: hidden;
+    .slides {
+        display: flex;
+        transition: transform 0.5s ease-in-out;
+    }
+    &:hover {
+        & > .prev, & > .next {
+            visibility: visible;
+        }
+    }
+    .slide {
+        min-width: 100%;
+        height: auto;
+        position: relative;
+        max-height: 80vh;
+        object-fit: cover;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        overflow: hidden;
+
+        & > img {
+            height: 100%;
+            width: 100%;
+            object-fit: cover;
+        }
+
+        & > .caption {
+            position: absolute;
+            bottom: 0;
+            background: lch(0 0 0 / 0.34);
+            color: #ffffff;
+            width: 100%;
+            padding: 0.5rem;
+        }
+    }
+
+    .prev, .next {
+        position: absolute;
+        visibility: hidden;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(0, 0, 0, .40);
+        border-radius: 100%;
+        width: 40px;
+        line-height: 0;
+        aspect-ratio: 1;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+
+        &:before {
+            font-size: 28px;
+        }
+    }
+
+    .prev {
+        left: var(--btn-gap);
+
+        &:before {
+            content: '\003C';
+        }
+    }
+
+    .next {
+        right: var(--btn-gap);
+
+        &:before {
+            content: '\003E';
+        }
+    }
+
+    &[data-rtl="true"] {
+        direction: ltr;
+    }
+
+    .dots {
+        display: flex;
+        gap: 2px;
+        align-items: center;
+        justify-content: center;
+        padding: 0.25rem;
+
+        & > span {
+            background-color: var(--theme-bg-2);
+            display: block;
+            width: 15px;
+            aspect-ratio: 1;
+            border-radius: 100%;
+            cursor: pointer;
+
+            &.current {
+                background-color: var(--theme-bg-5);
+            }
+        }
+    }
+}
