@@ -4,7 +4,7 @@ export default defineConfig({
   plugins: [],
   base: "",
   build: {
-    outDir: "build",
+    outDir: "docs",
     emptyOutDir: true,
     copyPublicDir: true,
     rollupOptions: {
