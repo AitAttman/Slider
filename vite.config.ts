@@ -9,9 +9,7 @@ export default defineConfig({
     copyPublicDir: true,
     rollupOptions: {
       input: {
-        // "slider": "src/slider.ts",
         "index": "index.html",
-        // "index": "pages/index2.html",
       },
       output: {
         entryFileNames: '[name].min.js',
@@ -22,8 +20,8 @@ export default defineConfig({
         manualChunks: (id) => {
           if( id.includes('slider.ts'))
             return 'slider'
-          if( id.includes('style.scss'))
-            return 'style'
+          if( id.includes('slider.style.scss'))
+            return 'slider'
         }
       }
     }

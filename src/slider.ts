@@ -38,12 +38,14 @@ export default function Slider(
     autoplay: false,
     navButtons: true,
   };
+  // load configuration from slider dataset
   for (const [k, v] of Object.entries(slider.dataset)) {
     if (k === "navDots") currentConfig.navDots = v !== "false";
     if (k === "autoplay") currentConfig.autoplay = v === "true";
     if (k === "rtl") currentConfig.rtl = v === "true";
     if (k === "navButtons") currentConfig.navButtons = v !== "false";
   }
+  // if config parameter is not empty, override currentConfing
   if (Object.keys(config).length > 0) {
     for (const [k, v] of Object.entries(config)) {
       currentConfig[k] = v;
@@ -225,3 +227,9 @@ export default function Slider(
     destroy: destroy,
   };
 }
+declare global{
+  interface Window{
+    Slider: typeof Slider
+  }
+}
+window.Slider = Slider
