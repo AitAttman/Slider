@@ -47,6 +47,7 @@ $text-sizes:(
     }
 }
 $paddings: (
+    0: 0,
     1: 0.5rem,
     2: 0.7rem,
     3: 1.2rem,
@@ -56,5 +57,18 @@ $paddings: (
 @each $k, $v in $paddings{
     .p-#{$k}{
         padding: #{$v};
+    }
+}
+$margins: (
+    0: 0rem,
+    1: 0.5rem,
+    2: 0.7rem,
+    3: 1.2rem,
+    4: 1.8rem,
+    5: 2.3rem
+)!default;
+@each $k, $v in $margins{
+    .m-#{$k}{
+        margin: #{$v};
     }
 }

@@ -44,6 +44,7 @@ export default function Slider(
     if (k === "autoplay") currentConfig.autoplay = v === "true";
     if (k === "rtl") currentConfig.rtl = v === "true";
     if (k === "navButtons") currentConfig.navButtons = v !== "false";
+    if (k === "interval") currentConfig.interval = Number(v || 3000) ;
   }
   // if config parameter is not empty, override currentConfing
   if (Object.keys(config).length > 0) {
