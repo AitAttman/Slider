@@ -3,6 +3,7 @@
 [https://aitattman.github.io/Slider/](https://aitattman.github.io/Slider)
 ## Characteristics 
 * **JS and css only, independent of any library**
+* **Supports touch and drag on touch screens**
 * **Works for any content like photos or texts**
 * **Captions on top of images**
 * **loop**
