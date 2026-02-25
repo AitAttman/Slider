@@ -3,6 +3,7 @@ type SliderConfig = {
   interval?: number;
   autoplay?: boolean;
   navButtons?: boolean;
+  visibleSlides?: number;
   [key: string]: any;
 };
 export default function Slider(
@@ -30,7 +31,6 @@ export default function Slider(
   let touchEndX = 0;
   let autoplayInterval: number | null;
   let isMovingByTouch = false;
-  // let visibleSides = 3
   // track mouse to move slider with left and right arrows on desktop:
   let mouseInside = false;
   const currentConfig: SliderConfig = {
@@ -38,6 +38,7 @@ export default function Slider(
     interval: 3000,
     autoplay: false,
     navButtons: true,
+    visibleSlides: 1,
   };
   // load configuration from slider dataset
   for (const [k, v] of Object.entries(slider.dataset)) {
@@ -45,6 +46,7 @@ export default function Slider(
     if (k === "autoplay") currentConfig.autoplay = v === "true";
     if (k === "navButtons") currentConfig.navButtons = v !== "false";
     if (k === "interval") currentConfig.interval = Number(v || 3000);
+    if (k === "visibleSlides") currentConfig.visibleSlides = Number(v || 1);
   }
   const direction =
     slider.getAttribute("dir") || getComputedStyle(slider).direction;
@@ -72,7 +74,11 @@ export default function Slider(
       setTimeout(() => {
         isMovingByTouch = false;
       }, 500);
-    slidesContainer.style.transform = `translateX(${-currentIndex * rtlFactor * 100}%)`;
+    const slidesVisibleFactor =
+      currentConfig.visibleSlides && currentConfig.visibleSlides > 1
+        ? currentConfig.visibleSlides
+        : 0;
+    slidesContainer.style.transform = `translateX(${-(currentIndex - slidesVisibleFactor) * rtlFactor * 100}%)`;
   };
   const createDots = () => {
     if (!currentConfig.navDots) return;
@@ -181,6 +187,12 @@ export default function Slider(
     image.src = image.dataset.src;
     image.removeAttribute("data-src");
   };
+  // update slide widths:
+  if (currentConfig.visibleSlides && currentConfig.visibleSlides > 1)
+    slider.style.setProperty(
+      "--slide-width",
+      `calc(100% / ${currentConfig.visibleSlides})`,
+    );
   createDots();
   createNavBtns();
   if (totalSlides > 1) {
