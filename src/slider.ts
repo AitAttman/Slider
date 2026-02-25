@@ -1,6 +1,5 @@
 type SliderConfig = {
   navDots?: boolean;
-  rtl?: boolean;
   interval?: number;
   autoplay?: boolean;
   navButtons?: boolean;
@@ -9,14 +8,14 @@ type SliderConfig = {
 export default function Slider(
   container: HTMLDivElement | string = ".slider",
   config: SliderConfig = {},
-) {
+): { destroy: () => void } | null {
   const slider: HTMLDivElement | null =
     typeof container === "string"
       ? document.querySelector(container)
       : container;
   if (!slider) {
     console.error("slider container does not exist");
-    return;
+    return null;
   }
 
   const slidesContainer: HTMLDivElement | null =
@@ -31,9 +30,11 @@ export default function Slider(
   let touchEndX = 0;
   let autoplayInterval: number | null;
   let isMovingByTouch = false;
+  // let visibleSides = 3
+  // track mouse to move slider with left and right arrows on desktop:
+  let mouseInside = false;
   const currentConfig: SliderConfig = {
     navDots: true,
-    rtl: false,
     interval: 3000,
     autoplay: false,
     navButtons: true,
@@ -42,17 +43,18 @@ export default function Slider(
   for (const [k, v] of Object.entries(slider.dataset)) {
     if (k === "navDots") currentConfig.navDots = v !== "false";
     if (k === "autoplay") currentConfig.autoplay = v === "true";
-    if (k === "rtl") currentConfig.rtl = v === "true";
     if (k === "navButtons") currentConfig.navButtons = v !== "false";
-    if (k === "interval") currentConfig.interval = Number(v || 3000) ;
+    if (k === "interval") currentConfig.interval = Number(v || 3000);
   }
+  const direction =
+    slider.getAttribute("dir") || getComputedStyle(slider).direction;
+  const rtlFactor = direction === "rtl" ? -1 : 1;
   // if config parameter is not empty, override currentConfing
   if (Object.keys(config).length > 0) {
     for (const [k, v] of Object.entries(config)) {
       currentConfig[k] = v;
     }
   }
-  if (currentConfig.rtl) slider.dataset.rtl = "true";
   const updateDotState = (index: number) => {
     if (!currentConfig.navDots) return;
     dots?.querySelector(".current")?.classList.remove("current");
@@ -70,7 +72,7 @@ export default function Slider(
       setTimeout(() => {
         isMovingByTouch = false;
       }, 500);
-    slidesContainer.style.transform = `translateX(${-currentIndex * 100}%)`;
+    slidesContainer.style.transform = `translateX(${-currentIndex * rtlFactor * 100}%)`;
   };
   const createDots = () => {
     if (!currentConfig.navDots) return;
@@ -159,6 +161,20 @@ export default function Slider(
       moveSlider(currentIndex + (swipDistance > 0 ? 1 : -1));
     }
   };
+  const enableKeyboardActions = () => {
+    mouseInside = true;
+  };
+  const disableKeyboardActions = () => {
+    mouseInside = false;
+  };
+  const onKeydown = (ev: KeyboardEvent) => {
+    if (!mouseInside) return;
+    if (ev.code === "ArrowLeft") {
+      moveSlider(currentIndex + 1);
+    } else if (ev.code === "ArrowRight") {
+      moveSlider(currentIndex - 1);
+    }
+  };
   const removeImageLazyProps = (image: HTMLImageElement | null) => {
     if (!image || !image.dataset.src) return;
     image.classList.remove("lazy");
@@ -199,7 +215,9 @@ export default function Slider(
     slider.addEventListener("touchend", startAutoPlay);
     slider.addEventListener("mouseleave", startAutoPlay);
   }
-
+  slider.addEventListener("mouseenter", enableKeyboardActions);
+  slider.addEventListener("mouseleave", disableKeyboardActions);
+  window.addEventListener("keydown", onKeydown);
   const destroy = () => {
     if (nextBtn) nextBtn.remove();
     if (prevBtn) prevBtn.remove();
@@ -215,6 +233,11 @@ export default function Slider(
     slidesContainer?.removeEventListener("touchstart", onTouchstart);
     slidesContainer?.removeEventListener("touchmove", onTouchmove);
     slidesContainer?.removeEventListener("touchend", onTouchend);
+
+    //remove keyboard events
+    slider.removeEventListener("mouseenter", enableKeyboardActions);
+    slider.removeEventListener("mouseleave", disableKeyboardActions);
+    window.removeEventListener("keydown", onKeydown);
     // remove cloned
     if (totalSlides > 1) {
       slides[0]?.remove();
@@ -228,9 +251,9 @@ export default function Slider(
     destroy: destroy,
   };
 }
-declare global{
-  interface Window{
-    Slider: typeof Slider
+declare global {
+  interface Window {
+    Slider: typeof Slider;
   }
 }
-window.Slider = Slider
+window.Slider = Slider;

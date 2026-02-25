@@ -3,12 +3,14 @@
 [https://aitattman.github.io/Slider/](https://aitattman.github.io/Slider)
 ## Characteristics 
 * **JS and css only, independent of any library**
+* **Supports Right-To-Left Layout**
 * **Supports touch and drag on touch screens**
 * **Works for any content like photos or texts**
 * **Captions on top of images**
 * **loop**
 * **autoplay**
 * **navigation buttons**
+* **Move with keyboard actions (Arrow left & Arrow right)**
 ### 1. Include slider style (slider.min.css) at top of you document:
 ```
 <link rel="stylesheet" crossorigin href="./docs/slider.min.css">
@@ -82,7 +84,6 @@ You can configure the Slider by passing object of paramters as second parameter 
 ```
 Slider('.slider',{
     navDots: true,
-    rtl: false,
     interval: 3000,
     autoplay: false,
     navButtons: true,
@@ -90,14 +91,13 @@ Slider('.slider',{
 ```
 You can also configure the slider by data-* attributes on slider container:
 1. **data-nav-dots**: true|false
-2. **data-rtl**: true|false
 3. **data-interval**: number
 3. **data-autoplay**: true|false
 3. **data-nav-buttons**: true|false
 
 example:
 ```
-<div class="slider my-slider" data-nav-dots="true" data-rtl="false" data-autoplay="false" data-interval="3000" data-nav-buttons="true">
+<div class="slider my-slider" data-nav-dots="true" data-autoplay="false" data-interval="3000" data-nav-buttons="true">
 .
 .
 .
@@ -105,7 +105,6 @@ example:
 ```
 **Available config**
 1. **navDots** : show or hide navigation dots
-2. **rtl** : whether the colument is rtl or not
 3. **autoplay**: Autoplay the slider
 4. **interval**: time in miliseconds, works only if *autoplay* is enabled
 5. **navButtons**: show/hide right/left navigation buttons 

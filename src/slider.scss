@@ -1,113 +1,113 @@
 .slider {
-    --btn-gap: 0;
-    --dots-bg:#838383;
+  --btn-gap: 0;
+  --dots-bg: #dfdfdf;
+  --dots-current-bg: #c1c1c1;
+  position: relative;
+  max-width: 100%;
+  margin: 0 auto;
+  overflow: hidden;
+  .slides {
     position: relative;
-    max-width: 100%;
-    margin: 0 auto;
-    overflow: hidden;
-    .slides {
-        position: relative;
-        display: flex;
-        transition: transform 0.5s ease-in-out;
-        min-height: 100px;
-    }
-    &:hover {
-        & > .prev, & > .next {
-            visibility: visible;
-        }
-    }
-    .slide {
-        min-width: 100%;
-        height: auto;
-        position: relative;
-        max-height: 80vh;
+    display: flex;
+    transition: transform 0.5s ease-in-out;
+    min-height: 100px;
+    & > .slide {
+      //   min-width: calc(100% / 3);
+      min-width: 100%;
+      height: auto;
+      position: relative;
+      max-height: 80vh;
+      object-fit: cover;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      overflow: hidden;
+
+      & > img {
+        height: 100%;
+        width: 100%;
         object-fit: cover;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        flex-direction: column;
-        overflow: hidden;
+      }
 
-        & > img {
-            height: 100%;
-            width: 100%;
-            object-fit: cover;
-        }
-
-        & > .caption {
-            position: absolute;
-            bottom: 0;
-            left:0;
-            right:0;
-            background: lch(0 0 0 / 0.34);
-            color: #ffffff;
-            padding: 0.7rem;
-            margin: 0;
-        }
-    }
-
-    .prev, .next {
+      & > .caption {
         position: absolute;
-        visibility: hidden;
-        top: 5%;
-        height: 80%;
-        line-height: 0;
-        border: none;
-        background-color: transparent;
-        cursor: pointer;
-
-        &:before {
-            font-size: 28px;
-            background: rgba(0, 0, 0, .40);
-            border-radius: 100%;
-            width: 40px;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            aspect-ratio: 1/1;
-            color: white;
-        }
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: lch(0 0 0 / 0.34);
+        color: #ffffff;
+        padding: 0.7rem;
+        margin: 0;
+      }
     }
-
-    .prev {
-        left:0;
-
-        &:before {
-            content: '\003C';
-        }
+  }
+  &:hover {
+    & > .prev,
+    & > .next {
+      visibility: visible;
     }
+  }
 
-    .next {
-        right:0;
+  .prev,
+  .next {
+    position: absolute;
+    visibility: hidden;
+    top: 5%;
+    height: 80%;
+    line-height: 0;
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
 
-        &:before {
-            content: '\003E';
-        }
+    &:before {
+      font-size: 28px;
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 100%;
+      width: 40px;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      aspect-ratio: 1/1;
+      color: white;
     }
+  }
 
-    &[data-rtl="true"] {
-        direction: ltr;
+  .prev {
+    inset-inline-start: 0;
+
+    &:before {
+      content: "\003C";
     }
+  }
 
-    .dots {
-        display: flex;
-        gap: 2px;
-        align-items: center;
-        justify-content: center;
-        padding: 0.25rem;
+  .next {
+    inset-inline-end: 0;
 
-        & > span {
-            background-color: var(--dots-bg);
-            display: block;
-            width: 15px;
-            aspect-ratio: 1;
-            border-radius: 100%;
-            cursor: pointer;
-
-            &.current {
-                background-color: #7ae8fe;
-            }
-        }
+    &:before {
+      content: "\003E";
     }
+  }
+
+  .dots {
+    display: flex;
+    gap: 2px;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem;
+
+    & > span {
+      background-color: var(--dots-bg);
+      display: block;
+      width: 15px;
+      aspect-ratio: 1;
+      border-radius: 100%;
+      cursor: pointer;
+
+      &.current {
+        background-color: var(--dots-current-bg);
+      }
+    }
+  }
 }
