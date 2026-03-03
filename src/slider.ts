@@ -1,13 +1,24 @@
 type SliderConfig = {
-  navDots?: boolean;
-  interval?: number;
-  autoplay?: boolean;
-  navButtons?: boolean;
+  navDots: boolean;
+  interval: number;
+  autoplay: boolean;
+  navButtons: boolean;
+  visibleSlides: number;
+  breakpoints:
+    | false
+    | {
+        [width: number]: number;
+      };
   [key: string]: any;
 };
+/**
+ * Responsive infinite carousel/slider
+ * @param container
+ * @param config
+ */
 export default function Slider(
   container: HTMLDivElement | string = ".slider",
-  config: SliderConfig = {},
+  config: SliderConfig | {} = {},
 ): { destroy: () => void } | null {
   const slider: HTMLDivElement | null =
     typeof container === "string"
@@ -25,62 +36,103 @@ export default function Slider(
   let nextBtn: HTMLButtonElement | null = null;
   let dots: HTMLDivElement | null = null;
   let currentIndex = 0;
-  let totalSlides = slides.length;
+  let currentPosition = 0;
+  const originalSlidesCount = slides.length;
+  let totalSlides = originalSlidesCount;
   let touchStartX = 0;
   let touchEndX = 0;
   let autoplayInterval: number | null;
   let isMovingByTouch = false;
-  // let visibleSides = 3
   // track mouse to move slider with left and right arrows on desktop:
   let mouseInside = false;
+  let widthObserverTimer: number | undefined = undefined;
+  // avoid running destroy() in the observer when first inistalized
+  let sliderInitialized = false;
   const currentConfig: SliderConfig = {
     navDots: true,
-    interval: 3000,
+    interval: 5000,
     autoplay: false,
     navButtons: true,
+    visibleSlides: 1,
+    breakpoints: {
+      520: 1,
+      640: 2,
+      768: 3,
+      1024: 4,
+      1200: 5,
+    },
   };
   // load configuration from slider dataset
   for (const [k, v] of Object.entries(slider.dataset)) {
-    if (k === "navDots") currentConfig.navDots = v !== "false";
-    if (k === "autoplay") currentConfig.autoplay = v === "true";
-    if (k === "navButtons") currentConfig.navButtons = v !== "false";
-    if (k === "interval") currentConfig.interval = Number(v || 3000);
+    if (k === "navDots") currentConfig.navDots = v?.toLowerCase() !== "false";
+    else if (k === "autoplay")
+      currentConfig.autoplay = v?.toLowerCase() === "true";
+    else if (k === "navButtons")
+      currentConfig.navButtons = v?.toLowerCase() !== "false";
+    else if (k === "interval" && v) currentConfig.interval = Number(v || 3000);
+    else if (k === "visibleSlides") {
+      // might be changed using breakpoints
+      currentConfig.visibleSlides = Number(v || 1);
+    } else if (k === "breakpoints" && v) {
+      if (v.toLowerCase() === "false") {
+        currentConfig.breakpoints = false;
+      } else {
+        const value = JSON.parse(v);
+        if (value) currentConfig.breakpoints = value;
+      }
+    }
   }
-  const direction =
-    slider.getAttribute("dir") || getComputedStyle(slider).direction;
-  const rtlFactor = direction === "rtl" ? -1 : 1;
+  const rtlFactor =
+    (slider.getAttribute("dir") || getComputedStyle(slider).direction) === "rtl"
+      ? -1
+      : 1;
   // if config parameter is not empty, override currentConfing
   if (Object.keys(config).length > 0) {
     for (const [k, v] of Object.entries(config)) {
       currentConfig[k] = v;
     }
   }
+  if (!currentConfig.visibleSlides || currentConfig.visibleSlides < 1)
+    currentConfig.visibleSlides = 1;
+  const cloneSlides = () => {
+    if (originalSlidesCount <= 1) return;
+    //prepend last slides
+    for (let i = 0; i < currentConfig.visibleSlides; i++) {
+      if (originalSlidesCount - i > 0) {
+        const slide: HTMLDivElement = slides[
+          originalSlidesCount - i - 1
+        ]?.cloneNode(true) as HTMLDivElement;
+        slide?.classList.add("clone");
+        if (slide) slidesContainer?.prepend(slide);
+      }
+    }
+    // prepend slides
+    for (let i = 0; i <= currentConfig.visibleSlides; i++) {
+      const slide: HTMLDivElement = slides[i]?.cloneNode(
+        true,
+      ) as HTMLDivElement;
+      slide?.classList.add("clone");
+      if (slide) slidesContainer?.append(slide);
+    }
+    totalSlides = slidesContainer?.querySelectorAll(".slide").length || 0;
+  };
   const updateDotState = (index: number) => {
     if (!currentConfig.navDots) return;
     dots?.querySelector(".current")?.classList.remove("current");
     dots?.querySelector(`[data-index="${index}"]`)?.classList.add("current");
   };
-  const moveSlider = (index: number, transition: boolean = true) => {
-    if (!slidesContainer) return;
-    if (transition) isMovingByTouch = true;
-    if (index < 0) index = 0;
-    else if (index > totalSlides - 1) index = totalSlides - 1;
-    slidesContainer.style.transition = transition ? "" : "none";
-    currentIndex = index;
-    updateDotState(index);
-    if (transition)
-      setTimeout(() => {
-        isMovingByTouch = false;
-      }, 500);
-    slidesContainer.style.transform = `translateX(${-currentIndex * rtlFactor * 100}%)`;
-  };
+
   const createDots = () => {
     if (!currentConfig.navDots) return;
-    const old = slider?.querySelector(".dots");
-    if (old) old.remove();
+    // remove old
+    slider?.querySelector(".dots")?.remove();
     let c = document.createElement("div");
     c.classList.add("dots");
-    for (let i = 1; i <= totalSlides; i++) {
+    for (
+      let i = 1;
+      i <= Math.ceil(originalSlidesCount / currentConfig.visibleSlides);
+      i++
+    ) {
       let dot = document.createElement("span");
       // i === 1 not 0 because 1 is the index of real first slide not cloned one
       if (i === 1) dot.classList.add("current");
@@ -89,20 +141,21 @@ export default function Slider(
     }
     slider.appendChild(c);
     dots = c;
-    if (totalSlides >= 2)
+    if (originalSlidesCount >= 2)
       dots.addEventListener("click", (ev) => {
         let target: HTMLElement | null = ev.target as HTMLElement;
         if (!target || target.tagName.toLowerCase() !== "span") return;
         let index = Number(target.dataset.index);
         // currentIndex = index
         if (currentIndex !== index) {
-          updateDotState(index);
-          moveSlider(index, true);
+          updateDotState(Math.floor(index / currentConfig.visibleSlides));
+          currentIndex = index;
+          moveSlider(true);
         }
       });
   };
   const createNavBtns = () => {
-    if (!currentConfig.navButtons || totalSlides < 2) return;
+    if (!currentConfig.navButtons || originalSlidesCount < 2) return;
     const createBtn = (className: string) => {
       let btn = document.createElement("button");
       btn.classList.add(className);
@@ -112,18 +165,17 @@ export default function Slider(
     if (!(prevBtn = slider.querySelector(".prev"))) prevBtn = createBtn("prev");
     if (!(nextBtn = slider.querySelector(".next"))) nextBtn = createBtn("next");
     prevBtn?.addEventListener("click", () => {
-      moveSlider(currentIndex - 1);
+      movePrev();
     });
     nextBtn?.addEventListener("click", () => {
-      moveSlider(currentIndex + 1);
+      moveNext();
     });
   };
   const startAutoPlay = () => {
     if (autoplayInterval) return;
     autoplayInterval = setInterval(() => {
-      let index = currentIndex + 1;
-      if (index > totalSlides) index = 1;
-      moveSlider(index);
+      currentIndex = currentIndex;
+      moveNext();
     }, currentConfig.interval);
   };
   const stopAutoPlay = () => {
@@ -131,11 +183,13 @@ export default function Slider(
     autoplayInterval = null;
   };
   const onTransitionend = () => {
-    let index = -1;
-    if (currentIndex <= 0) index = totalSlides - 2;
-    else if (currentIndex >= totalSlides - 1) index = 1;
-    if (index !== -1) {
-      moveSlider(index, false);
+    if (currentIndex < currentConfig.visibleSlides) {
+      currentIndex = currentIndex + originalSlidesCount;
+      moveSlider(false);
+    } else if (currentIndex >= originalSlidesCount + 1) {
+      // If we landed on the "Start Clones" at the end
+      currentIndex = currentIndex - originalSlidesCount;
+      moveSlider(false);
     }
   };
   const onTouchstart = (ev: TouchEvent) => {
@@ -143,12 +197,12 @@ export default function Slider(
     touchEndX = touchStartX;
   };
   const onTouchmove = (ev: TouchEvent) => {
-    if (isMovingByTouch) return;
-    touchEndX = ev.touches[0].clientX;
     if (!slidesContainer || totalSlides < 2) return;
+    touchEndX = ev.touches[0].clientX;
     const swipDistance = touchStartX - touchEndX;
     const percentage = (swipDistance / slider.offsetWidth) * 100;
-    const move = -currentIndex * 100 - percentage;
+    const move = currentPosition - percentage;
+
     slidesContainer.style.transition = `none`;
     slidesContainer.style.transform = `translateX(${move}%)`;
   };
@@ -156,10 +210,31 @@ export default function Slider(
     if (isMovingByTouch) return;
     const swipDistance = touchStartX - touchEndX;
     if (Math.abs(swipDistance) < 50) {
-      moveSlider(currentIndex);
+      slidesContainer!.style.transform = `translateX(${currentPosition}%)`;
     } else {
-      moveSlider(currentIndex + (swipDistance > 0 ? 1 : -1));
+      if (swipDistance > 0) moveNext();
+      else movePrev();
     }
+  };
+  const moveNext = () => {
+    currentIndex += currentConfig.visibleSlides;
+    moveSlider();
+  };
+  const movePrev = () => {
+    currentIndex -= currentConfig.visibleSlides;
+    moveSlider();
+  };
+  const moveSlider = (transition: boolean = true) => {
+    if (!slidesContainer) return;
+    if (currentIndex < 0) currentIndex = currentConfig.visibleSlides;
+    else if (currentIndex > totalSlides - 1)
+      currentIndex = originalSlidesCount + currentConfig.visibleSlides - 1;
+
+    slidesContainer.style.transition = transition ? "" : "none";
+    updateDotState(Math.floor(currentIndex / currentConfig.visibleSlides));
+    currentPosition =
+      -currentIndex * rtlFactor * (100 / currentConfig.visibleSlides);
+    slidesContainer.style.transform = `translateX(${currentPosition}%)`;
   };
   const enableKeyboardActions = () => {
     mouseInside = true;
@@ -167,93 +242,113 @@ export default function Slider(
   const disableKeyboardActions = () => {
     mouseInside = false;
   };
+
   const onKeydown = (ev: KeyboardEvent) => {
     if (!mouseInside) return;
     if (ev.code === "ArrowLeft") {
-      moveSlider(currentIndex + 1);
+      moveNext();
     } else if (ev.code === "ArrowRight") {
-      moveSlider(currentIndex - 1);
+      movePrev();
     }
   };
-  const removeImageLazyProps = (image: HTMLImageElement | null) => {
-    if (!image || !image.dataset.src) return;
-    image.classList.remove("lazy");
-    image.src = image.dataset.src;
-    image.removeAttribute("data-src");
+
+  const init = () => {
+    // update slide widths:
+    if (originalSlidesCount > 1)
+      slider.style.setProperty(
+        "--slide-width",
+        `calc(100% / ${currentConfig.visibleSlides})`,
+      );
+    cloneSlides();
+    createNavBtns();
+    createDots();
+    if (originalSlidesCount > 1) {
+      currentIndex = currentConfig.visibleSlides;
+      moveSlider(false);
+      slidesContainer?.addEventListener("transitionend", onTransitionend);
+      slidesContainer?.addEventListener("touchstart", onTouchstart);
+      slidesContainer?.addEventListener("touchmove", onTouchmove);
+      slidesContainer?.addEventListener("touchend", onTouchend);
+    }
+    if (currentConfig.autoplay && originalSlidesCount > 1) {
+      startAutoPlay();
+      slider.addEventListener("touchstart", stopAutoPlay);
+      slider.addEventListener("mouseenter", stopAutoPlay);
+      slider.addEventListener("touchend", startAutoPlay);
+      slider.addEventListener("mouseleave", startAutoPlay);
+    }
+    slider.addEventListener("mouseenter", enableKeyboardActions);
+    slider.addEventListener("mouseleave", disableKeyboardActions);
+    window.addEventListener("keydown", onKeydown);
   };
-  createDots();
-  createNavBtns();
-  if (totalSlides > 1) {
-    const firstElement: HTMLDivElement = slides[0].cloneNode(
-      true,
-    ) as HTMLDivElement;
-    const firstImage: HTMLImageElement | null =
-      firstElement.querySelector("img.lazy");
-    removeImageLazyProps(firstImage);
-    slidesContainer?.appendChild(firstElement);
-    // last element
-    const lastElement: HTMLDivElement = slides[totalSlides - 1].cloneNode(
-      true,
-    ) as HTMLDivElement;
-    const lastImage: HTMLImageElement | null =
-      lastElement.querySelector("img.lazy");
-    removeImageLazyProps(lastImage);
-    slidesContainer?.prepend(lastElement);
-    slides = slider.querySelectorAll(".slide");
-    totalSlides = slides.length;
-    moveSlider(1, false);
 
-    slidesContainer?.addEventListener("transitionend", onTransitionend);
-    slidesContainer?.addEventListener("touchstart", onTouchstart);
-    slidesContainer?.addEventListener("touchmove", onTouchmove);
-    slidesContainer?.addEventListener("touchend", onTouchend);
-  }
-  if (currentConfig.autoplay && totalSlides > 1) {
-    startAutoPlay();
-    slider.addEventListener("touchstart", stopAutoPlay);
-    slider.addEventListener("mouseenter", stopAutoPlay);
-    slider.addEventListener("touchend", startAutoPlay);
-    slider.addEventListener("mouseleave", startAutoPlay);
-  }
-  slider.addEventListener("mouseenter", enableKeyboardActions);
-  slider.addEventListener("mouseleave", disableKeyboardActions);
-  window.addEventListener("keydown", onKeydown);
-  const destroy = () => {
-    if (nextBtn) nextBtn.remove();
-    if (prevBtn) prevBtn.remove();
-    if (dots) dots.remove();
-    if (currentConfig.autoplay && totalSlides > 1) {
-      stopAutoPlay();
-      slider.removeEventListener("touchstart", stopAutoPlay);
-      slider.removeEventListener("mouseenter", stopAutoPlay);
-      slider.removeEventListener("touchend", startAutoPlay);
-      slider.removeEventListener("mouseleave", startAutoPlay);
+  const resizeObserver = new ResizeObserver((entries) => {
+    clearTimeout(widthObserverTimer);
+    widthObserverTimer = setTimeout(async () => {
+      if (sliderInitialized) await destroy();
+      const newWidth = entries[0].contentRect.width;
+      updateVisibleSlides(newWidth);
+      init();
+      sliderInitialized = true;
+    }, 2000);
+  });
+  /**
+   * update visible slides based on current breakpoint
+   * @param sliderWidth
+   */
+  const updateVisibleSlides = (sliderWidth: number) => {
+    if (!currentConfig.breakpoints) return;
+    const widths = Object.keys(currentConfig.breakpoints)
+      // convert strings into numbers: eg. "768" => 768
+      .map(Number)
+      .sort((a, b) => a - b);
+    currentConfig.visibleSlides = 6;
+    for (const w of widths) {
+      if (sliderWidth <= w) {
+        currentConfig.visibleSlides = currentConfig.breakpoints[w];
+        break;
+      }
     }
-    slidesContainer?.removeEventListener("transitionend", onTransitionend);
-    slidesContainer?.removeEventListener("touchstart", onTouchstart);
-    slidesContainer?.removeEventListener("touchmove", onTouchmove);
-    slidesContainer?.removeEventListener("touchend", onTouchend);
+    if (currentConfig.visibleSlides > originalSlidesCount) {
+      currentConfig.visibleSlides = originalSlidesCount;
+    }
+  };
+  if (currentConfig.breakpoints) {
+    resizeObserver.observe(slider);
+  } else {
+    init();
+  }
 
-    //remove keyboard events
-    slider.removeEventListener("mouseenter", enableKeyboardActions);
-    slider.removeEventListener("mouseleave", disableKeyboardActions);
-    window.removeEventListener("keydown", onKeydown);
-    // remove cloned
-    if (totalSlides > 1) {
-      slides[0]?.remove();
-      slides[slides.length - 1]?.remove();
-    }
-    // remove dots
-    let prevDots = slider.querySelector(".dots");
-    if (prevDots) prevDots.remove();
+  const destroy = async (): Promise<void> => {
+    return new Promise((resolve) => {
+      if (nextBtn) nextBtn.remove();
+      if (prevBtn) prevBtn.remove();
+      if (dots) dots.remove();
+      if (currentConfig.autoplay && originalSlidesCount > 1) {
+        stopAutoPlay();
+        slider.removeEventListener("touchstart", stopAutoPlay);
+        slider.removeEventListener("mouseenter", stopAutoPlay);
+        slider.removeEventListener("touchend", startAutoPlay);
+        slider.removeEventListener("mouseleave", startAutoPlay);
+      }
+      slidesContainer?.removeEventListener("transitionend", onTransitionend);
+      slidesContainer?.removeEventListener("touchstart", onTouchstart);
+      slidesContainer?.removeEventListener("touchmove", onTouchmove);
+      slidesContainer?.removeEventListener("touchend", onTouchend);
+      //remove keyboard events
+      slider.removeEventListener("mouseenter", enableKeyboardActions);
+      slider.removeEventListener("mouseleave", disableKeyboardActions);
+      window.removeEventListener("keydown", onKeydown);
+      // remove cloned
+      slidesContainer
+        ?.querySelectorAll(".slide.clone")
+        .forEach((el) => el.remove());
+      // remove dots
+      slider.querySelector(".dots")?.remove();
+      resolve();
+    });
   };
   return {
     destroy: destroy,
   };
 }
-declare global {
-  interface Window {
-    Slider: typeof Slider;
-  }
-}
-window.Slider = Slider;

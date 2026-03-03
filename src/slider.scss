@@ -2,6 +2,7 @@
   --btn-gap: 0;
   --dots-bg: #dfdfdf;
   --dots-current-bg: #c1c1c1;
+  --slide-width: 100%;
   position: relative;
   max-width: 100%;
   margin: 0 auto;
@@ -12,8 +13,7 @@
     transition: transform 0.5s ease-in-out;
     min-height: 100px;
     & > .slide {
-      //   min-width: calc(100% / 3);
-      min-width: 100%;
+      min-width: var(--slide-width);
       height: auto;
       position: relative;
       max-height: 80vh;
@@ -53,8 +53,8 @@
   .next {
     position: absolute;
     visibility: hidden;
-    top: 5%;
-    height: 80%;
+    top: 50%;
+    transform: translateY(-50%);
     line-height: 0;
     border: none;
     background-color: transparent;
