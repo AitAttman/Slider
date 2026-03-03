@@ -1,4 +1,5 @@
-# Infinite js/ts Carousel/Slider 
+# Infinite javascript Carousel/Slider 
+![Infinite javascript responsive carousel with breakpoints support](carousel-real-example_compressed.webp)
 **Demo:** You can see example of this slider in action here:\
 [https://aitattman.github.io/Slider](https://aitattman.github.io/Slider)
 
