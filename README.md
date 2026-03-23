@@ -11,12 +11,11 @@ Meet one the powerful carousels for the modern web. Built entirely with vanilla 
 * **Supports touch and drag on touch screens**
 * **Works for any content like photos, texts...**
 * **Captions on top of images**
-* **Infinit loop**
+* **Infinite loop**
 * **Autoplay**
-* **Ravigation buttons**
+* **Navigation buttons**
 * **Move with keyboard actions (Arrow left & Arrow right)**
-* **Rontrol visible slides**
-* **Responsive breakpoints: control visible slides based on container width**
+* **Responsive breakpoints: control number of visible slides based on container width**
 ### 1. Include slider style (slider.min.css) at top of you document:
 ```
 <link rel="stylesheet" crossorigin href="./docs/slider.min.css">

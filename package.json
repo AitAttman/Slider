@@ -1,9 +1,14 @@
 {
   "name": "slider",
   "private": true,
-  "version": "1.0.0",
+  "version": "2.0.0",
   "type": "module",
-  "description": "A lightweight carousel that supports touch screens autoplay",
+  "author": {
+    "name": "Ahmed Ait Attman",
+    "url": "https://aitattman.pages.dev",
+    "email": "aitattman@outlook.com"
+  },
+  "description": "Infinite Slider/Carousel to display content like images and texts in horizontal slides",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
