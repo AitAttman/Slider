@@ -12,9 +12,18 @@ type SliderConfig = {
   [key: string]: any;
 };
 /**
- * Responsive infinite carousel/slider
- * @param container
- * @param config
+ * Responsive infinite carousel/slider to display content like images and text in slide
+ * @param container string of css selector, or Html Element. Default: ".slider"
+ * @param config configuration object to controll number of visible slide, autoplay, navigation buttons visiblity.
+ *
+ * example: { navDots: false, interval: 5000, autoplay: true, navButtons: true, visibleSlides: 1, breakpoints: { 520: 1, 640: 2, 768: 3, 1024: 4, 1200: 5, } };
+ *
+ * The slider can also be configured via data-* attributes like: data-nav-dots="false" data-interval="6000" data-autoplay="true" data-visible-slides="2" data-breakpoints="false"
+ *
+ * @version 2.0.0
+ * @author Ahmed Ait Attman <aitattman@outook.com>
+ * @license MIT
+ * @link https://github.com/AitAttman/slider
  */
 export default function Slider(
   container: HTMLDivElement | string = ".slider",
