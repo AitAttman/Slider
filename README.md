@@ -16,9 +16,10 @@ Meet one the powerful carousels for the modern web. Built entirely with vanilla 
 * **Navigation buttons**
 * **Move with keyboard actions (Arrow left & Arrow right)**
 * **Responsive breakpoints: control number of visible slides based on container width**
+## Installtion
 ### 1. Include slider style (slider.min.css) at top of you document:
 ```
-<link rel="stylesheet" crossorigin href="./docs/slider.min.css">
+<link rel="stylesheet" href="./docs/slider.min.css">
 ```
 ### 2. Build Html:
 Basic html structure must be like this:
@@ -56,9 +57,27 @@ Example of html markup from demo:
       </div>
 </div>
 ```
-### 3. Initiate the slider by importing "slider.min.js":
+
+### 3. Initiate the slider
+You can initiate the slider in two different methods:
+#### 3-1. Use the global Slider function: 
+To make the **Slider** function availble globally, just include **slider.min.js** in your document body:
 ```
-import("./slider.min.js").then(({default: Slider}) => {
+<script src="./docs/slider.min.js"></script>
+```
+then call the slider directly on single container: **Slider('.slider')** or on many containers:
+```
+<script>
+    const sliderSelector = ".slider"
+    document.querySelectorAll( sliderSelector ).forEach((el) => {
+      Slider(el);
+    });
+</script>
+```
+#### 3-2. Use module method (UMD): 
+You can import slider function from **slider.esm.min.js** dynamically:
+```
+import("./slider.esm.min.js").then(({default: Slider}) => {
     Slider('.slider')
 })
 ```
@@ -71,7 +90,9 @@ import("./slider.min.js").then(({default: Slider}) => {
 ***Example***
 ```
 Slider('#my-slider-container', {autoplay:true, interval: 2000 })
+
 // Or use html element instance 
+
 const container = document.querySelector(".my-slider")
 if( container )
 Slider(container)

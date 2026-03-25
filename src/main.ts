@@ -1,6 +1,6 @@
 import type Slider from "./slider";
-import "./slider.scss";
-import "./style.scss";
+import "./slider.css";
+import "./style.css";
 declare global {
   interface Window {
     Slider: typeof Slider;
@@ -12,5 +12,4 @@ document.addEventListener("DOMContentLoaded", async () => {
   const containers: NodeListOf<HTMLDivElement> =
     document.querySelectorAll(".slider");
   containers.forEach((s) => Slider(s));
-  window.Slider = Slider;
 });

@@ -18,8 +18,8 @@ export default defineConfig({
           return "[name].min.js";
         },
         manualChunks: (id) => {
-          if (id.includes("slider.ts")) return "slider";
-          if (id.includes("slider.style.scss")) return "slider";
+          if (id.includes("slider.ts")) return "slider.esm";
+          if (id.includes("slider.css")) return "slider";
         },
       },
     },
